@@ -13,6 +13,7 @@
 # limitations under the License.
 
 set (MIDEND_SRCS
+  sharedData.cpp
   actionSynthesis.cpp
   booleanKeys.cpp
   complexComparison.cpp
@@ -63,6 +64,7 @@ set (MIDEND_SRCS
   )
 
 set (MIDEND_HDRS
+  sharedData.h
   actionSynthesis.h
   booleanKeys.h
   checkSize.h

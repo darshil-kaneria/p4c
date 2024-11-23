@@ -64,6 +64,8 @@ limitations under the License.
 #include "midend/simplifySelectList.h"
 #include "midend/tableHit.h"
 #include "midend/validateProperties.h"
+#include "midend/countActionTable.h"
+#include "midend/addTcount.h"
 
 namespace P4::BMV2 {
 
@@ -75,7 +77,10 @@ SimpleSwitchMidEnd::SimpleSwitchMidEnd(CompilerOptions &options, std::ostream *o
     if (!BMV2::SimpleSwitchContext::get().options().loadIRFromJson) {
         auto *convertEnums = new P4::ConvertEnums(&typeMap, new EnumOn32Bits("v1model.p4"_cs));
         addPasses(
-            {options.ndebug ? new P4::RemoveAssertAssume(&typeMap) : nullptr,
+            {
+             new P4::CountActionsAndTables(), // First count the number of actions and tables
+             new P4::AddTcountHeader(), // Then play around with the header field
+            options.ndebug ? new P4::RemoveAssertAssume(&typeMap) : nullptr,
              new P4::CheckTableSize(),
              new CheckUnsupported(),
              new P4::RemoveMiss(&typeMap),
