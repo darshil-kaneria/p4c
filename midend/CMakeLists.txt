@@ -14,6 +14,7 @@
 
 set (MIDEND_SRCS
   sharedData.cpp
+  printTableOrder.cpp
   actionSynthesis.cpp
   booleanKeys.cpp
   complexComparison.cpp
@@ -65,6 +66,7 @@ set (MIDEND_SRCS
 
 set (MIDEND_HDRS
   sharedData.h
+  printTableOrder.h
   actionSynthesis.h
   booleanKeys.h
   checkSize.h

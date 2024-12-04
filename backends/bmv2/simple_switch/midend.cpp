@@ -66,6 +66,7 @@ limitations under the License.
 #include "midend/validateProperties.h"
 #include "midend/countActionTable.h"
 #include "midend/addTcount.h"
+#include "midend/printTableOrder.h"
 
 namespace P4::BMV2 {
 
@@ -79,7 +80,8 @@ SimpleSwitchMidEnd::SimpleSwitchMidEnd(CompilerOptions &options, std::ostream *o
         addPasses(
             {
              new P4::CountActionsAndTables(), // First count the number of actions and tables
-             new P4::AddTcountHeader(), // Then play around with the header field
+            //  new P4::AddTcountHeader(), // Then play around with the header field
+             
             options.ndebug ? new P4::RemoveAssertAssume(&typeMap) : nullptr,
              new P4::CheckTableSize(),
              new CheckUnsupported(),
@@ -98,6 +100,7 @@ SimpleSwitchMidEnd::SimpleSwitchMidEnd(CompilerOptions &options, std::ostream *o
              new P4::SimplifySelectCases(&typeMap, true),  // require constant keysets
              new P4::ExpandLookahead(&typeMap),
              new P4::ExpandEmit(&typeMap),
+             new P4::PrintTableOrder(*outStream, refMap, typeMap),
              new P4::SimplifyParsers(),
              new P4::StrengthReduction(&typeMap),
              new P4::EliminateTuples(&typeMap),
@@ -126,6 +129,7 @@ SimpleSwitchMidEnd::SimpleSwitchMidEnd(CompilerOptions &options, std::ostream *o
                  "meters"_cs,
                  "support_timeout"_cs,
              }),
+             
              new P4::SimplifyControlFlow(&typeMap),
              new P4::EliminateTypedef(&typeMap),
              new P4::CompileTimeOperations(),
