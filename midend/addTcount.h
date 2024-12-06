@@ -6,18 +6,15 @@
 #include "midend/sharedData.h"
 
 namespace P4 {
-
     class AddTcountHeader : public Transform {
     public:
         const IR::Node *preorder(IR::P4Program *program) override {
             auto fields = new IR::IndexedVector<IR::StructField>();
             for (int i = 0; i < sharedData.tableCount; ++i) {
-                // Couldn't find a better name for a field
                 cstring fieldName = "field" + std::to_string(i + 1);
                 fields->push_back(new IR::StructField(fieldName, IR::Type_Bits::get(8)));
             }
             auto tcountHeader = new IR::Type_Header("tcount_t", *fields);
-
             bool inserted = false;
             for (auto it = program->objects.begin(); it != program->objects.end(); ++it) {
                 if (auto headerType = (*it)->to<IR::Type_Header>()) {
@@ -26,12 +23,9 @@ namespace P4 {
                     break;
                 }
             }
-
-            // If no header type was found, add the new header type at the beginning
             if (!inserted) {
                 program->objects.insert(program->objects.begin(), tcountHeader);
             }
-
             return program;
         }
 
@@ -45,11 +39,8 @@ namespace P4 {
         }
 
         const IR::Node *postorder(IR::P4Control *control) override {
-
-            // The most inefficient way to find the deparser control block lol
             bool isDeparser = false;
             bool isIngress = false;
-
             if (control->body != nullptr) {
                 for (const auto &component : control->body->components) {
                     if (auto methodCallStmt = component->to<IR::MethodCallStatement>()) {
@@ -65,17 +56,15 @@ namespace P4 {
                 }
             }
 
-            // Find a better way to grab the ingress control block
-            if (control->name == "MyIngress") {
+            if (control->name == "ACLIngress") {
                 isIngress = true;
             }
-            
-            // std::cout << "isDeparser: " << isDeparser << std::endl;
+
             if (isDeparser) {
                 auto body = control->body->components;
                 auto emitStmt = new IR::MethodCallStatement(
                     new IR::MethodCallExpression(
-                        new IR::PathExpression("packet.emit"),
+                        new IR::Member(new IR::PathExpression("packet"), "emit"),
                         new IR::Vector<IR::Type>({ new IR::Type_Name("tcount_t") }),
                         new IR::Vector<IR::Argument>({ new IR::Argument(new IR::Member(new IR::PathExpression("hdr"), "tcount")) })
                     )
@@ -94,11 +83,10 @@ namespace P4 {
                 body.insert(body.begin(), setValidStmt);
                 control->body = new IR::BlockStatement(body);
             }
-            
+
             return control;
         }
     };
-
 }
 
 #endif

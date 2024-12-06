@@ -40,7 +40,7 @@ OPTION (ENABLE_BMV2 "Build the BMV2 backend (required for the full test suite)" 
 OPTION (ENABLE_EBPF "Build the EBPF backend (required for the full test suite)" ON)
 OPTION (ENABLE_UBPF "Build the uBPF backend (required for the full test suite)" ON)
 OPTION (ENABLE_DPDK "Build the DPDK backend (required for the full test suite)" ON)
-OPTION (ENABLE_TOFINO "Build the TOFINO backend (required for the full test suite)" OFF)
+OPTION (ENABLE_TOFINO "Build the TOFINO backend (required for the full test suite)" ON)
 OPTION (ENABLE_P4TC "Build the P4TC backend" ON)
 OPTION (ENABLE_P4FMT "Build the P4FMT backend" ON)
 OPTION (ENABLE_P4TEST "Build the P4Test backend (required for the full test suite)" ON)

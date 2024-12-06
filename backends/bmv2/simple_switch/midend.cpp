@@ -67,6 +67,7 @@ limitations under the License.
 #include "midend/countActionTable.h"
 #include "midend/addTcount.h"
 #include "midend/printTableOrder.h"
+#include "midend/stageAnnotation.h"
 
 namespace P4::BMV2 {
 
@@ -77,11 +78,17 @@ SimpleSwitchMidEnd::SimpleSwitchMidEnd(CompilerOptions &options, std::ostream *o
     auto *evaluator = new P4::EvaluatorPass(&refMap, &typeMap);
     if (!BMV2::SimpleSwitchContext::get().options().loadIRFromJson) {
         auto *convertEnums = new P4::ConvertEnums(&typeMap, new EnumOn32Bits("v1model.p4"_cs));
+        auto *printOrder = new P4::PrintTableOrder(*outStream, refMap, typeMap);
         addPasses(
             {
+            // Custom passes for P4CKET
+            // -- CountActionsAndTables: Count the number of actions and tables
+            // -- AddTcountHeader: Add a header field to the packet to store the table count
+            // -- PrintTableOrder: Print the order of tables in the control block
+            //      and also identify the dependencies between tables
+
              new P4::CountActionsAndTables(), // First count the number of actions and tables
-            //  new P4::AddTcountHeader(), // Then play around with the header field
-             
+             new P4::AddTcountHeader(), // Insert header field
             options.ndebug ? new P4::RemoveAssertAssume(&typeMap) : nullptr,
              new P4::CheckTableSize(),
              new CheckUnsupported(),
@@ -100,7 +107,12 @@ SimpleSwitchMidEnd::SimpleSwitchMidEnd(CompilerOptions &options, std::ostream *o
              new P4::SimplifySelectCases(&typeMap, true),  // require constant keysets
              new P4::ExpandLookahead(&typeMap),
              new P4::ExpandEmit(&typeMap),
-             new P4::PrintTableOrder(*outStream, refMap, typeMap),
+             printOrder, // Custom P4CKET Pass to compare static and dynamic table order
+            [this, printOrder](const IR::Node *program) {
+                program->apply(*printOrder);
+                const auto &candidateTables = printOrder->getCandidateTables();
+                addPasses({new P4::StageAnnotation(0, candidateTables)});
+            },
              new P4::SimplifyParsers(),
              new P4::StrengthReduction(&typeMap),
              new P4::EliminateTuples(&typeMap),

@@ -45,6 +45,10 @@ void PrintTableOrder::readInterferenceData(const std::string &filename) {
     }
 }
 
+const std::vector<const IR::P4Table *> &PrintTableOrder::getCandidateTables() const {
+    return candidateTables;
+}
+
 bool PrintTableOrder::preorder(const IR::P4Control *control) {
     if (control->name == "ACLIngress") {
         std::cout << "Ingress control tables order:\n";
@@ -109,6 +113,14 @@ void PrintTableOrder::transformDependencies() {
         for (const auto& tableB : entry.second) {
             if (tableInterferences[tableA].find(tableB) == tableInterferences[tableA].end()) {
                 std::cout << "Transforming: " << tableA << " depends on " << tableB << " but does not interfere\n";
+                auto pathExprA = new IR::PathExpression(new IR::Path(tableA));
+                auto pathExprB = new IR::PathExpression(new IR::Path(tableB));
+                if (auto table = refMap.getDeclaration(pathExprA->path, true)->to<IR::P4Table>()) {
+                    candidateTables.push_back(table);
+                }
+                if (auto table = refMap.getDeclaration(pathExprB->path, true)->to<IR::P4Table>()) {
+                    candidateTables.push_back(table);
+                }
             }
         }
     }

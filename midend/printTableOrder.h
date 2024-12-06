@@ -5,12 +5,12 @@
 #include "ir/visitor.h"
 #include "frontends/p4/typeMap.h"
 #include "frontends/p4/methodInstance.h"
-#include "frontends/p4/typeChecking/typeChecker.h"
 #include <unordered_map>
 #include <unordered_set>
 #include <iostream>
 #include <fstream>
 #include <sstream>
+#include <vector>
 
 namespace P4 {
 
@@ -21,6 +21,7 @@ class PrintTableOrder : public Inspector {
     ReferenceMap &refMap;
     TypeMap &typeMap;
     std::ostream &outStream;
+    std::vector<const IR::P4Table *> candidateTables;
 
 public:
     PrintTableOrder(std::ostream &outStream, ReferenceMap &refMap, TypeMap &typeMap)
@@ -30,6 +31,7 @@ public:
     void printInterferences() const;
     void readInterferenceData(const std::string &filename);
     void transformDependencies();
+    const std::vector<const IR::P4Table *> &getCandidateTables() const;
 
     bool preorder(const IR::P4Control *control) override;
     bool preorder(const IR::BlockStatement *block) override;
